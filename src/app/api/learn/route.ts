@@ -2,19 +2,13 @@ import { NextResponse } from "next/server";
 
 import { getCurrentUser, unauthorized } from "@/lib/auth";
 import { pool } from "@/lib/db";
-import {
-  LEARN_MODEL,
-  PARTS,
-  QUIZ_SCHEMA,
-  buildGuidePrompt,
-  buildQuizPrompt,
-  debiasQuiz,
-} from "@/lib/learn";
+import { LEARN_MODEL, PARTS, buildGuidePrompt } from "@/lib/learn";
 import { getOpenAI } from "@/lib/openai";
 import { retrieve } from "@/lib/retrieve";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+// Hobby-plan functions cap at 60s; the three guide passes land around 50s.
+export const maxDuration = 60;
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -108,30 +102,11 @@ export async function POST(request: Request) {
           [user.workspaceId, subject, markdown, JSON.stringify(sources)],
         );
         const guideId = rows[0].id as string;
+        // The quiz is a separate request, not part of this one. Guide plus quiz
+        // in a single call runs ~65s, past the serverless function ceiling; split
+        // in two, each half finishes comfortably and the guide is readable while
+        // the quiz is still being written.
         send({ type: "guide", guideId });
-
-        send({ type: "status", text: "Writing your quiz…" });
-        const quizResponse = await openai.chat.completions.create({
-          model: LEARN_MODEL,
-          temperature: 0.5,
-          messages: [
-            { role: "user", content: buildQuizPrompt(subject, markdown) },
-          ],
-          response_format: {
-            type: "json_schema",
-            json_schema: { name: "quiz", schema: QUIZ_SCHEMA, strict: true },
-          },
-        });
-
-        const raw = quizResponse.choices[0]?.message?.content;
-        if (raw) {
-          const quiz = debiasQuiz(JSON.parse(raw));
-          await pool.query("UPDATE guides SET quiz = $2::jsonb WHERE id = $1", [
-            guideId,
-            JSON.stringify(quiz),
-          ]);
-          send({ type: "quiz", quiz });
-        }
 
         send({ type: "done" });
       } catch (error) {

@@ -8,7 +8,10 @@ import { ingestDocument } from "@/lib/ingest";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const MAX_BYTES = 20 * 1024 * 1024;
+// Vercel caps a serverless request body at 4.5MB, so a larger limit would only
+// fail at the platform with an opaque 413 the app never sees. Local runs keep
+// the roomier limit.
+const MAX_BYTES = process.env.VERCEL ? 4 * 1024 * 1024 : 20 * 1024 * 1024;
 
 export async function GET() {
   const user = await getCurrentUser();

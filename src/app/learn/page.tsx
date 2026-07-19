@@ -78,6 +78,7 @@ export default function LearnPage() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+      let guideId: string | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -99,13 +100,31 @@ export default function LearnPage() {
             setMarkdown((prev) => prev + frame.text);
           } else if (frame.type === "status") {
             setStatus(frame.text);
-          } else if (frame.type === "quiz") {
-            setQuiz(frame.quiz as Quiz);
           } else if (frame.type === "guide") {
+            guideId = frame.guideId as string;
             void refreshGuides();
           } else if (frame.type === "error") {
             setError(frame.error);
           }
+        }
+      }
+      // The guide is complete and readable at this point; the quiz is a second
+      // request so neither call runs long enough to be cut off.
+      if (guideId) {
+        setStatus("Writing your quiz…");
+        try {
+          const quizResponse = await fetch(`/api/guides/${guideId}/quiz`, { method: "POST" });
+          const data = await quizResponse.json();
+          if (quizResponse.ok) {
+            setQuiz(data.quiz as Quiz);
+            void refreshGuides();
+          } else {
+            // A missing quiz doesn't invalidate the guide, so this is a notice,
+            // not an error banner over the whole page.
+            setError(`The guide is saved, but the quiz failed: ${data.error}`);
+          }
+        } catch {
+          setError("The guide is saved, but the quiz request didn't complete.");
         }
       }
     } catch (caught) {
