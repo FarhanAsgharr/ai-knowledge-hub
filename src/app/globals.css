@@ -1,26 +1,241 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Two materials, two temperatures:
+  — paper (parchment, amber) for anything that came out of a user's document
+  — instrument (cyan, mono) for anything the retrieval layer measured
+*/
+@theme {
+  --color-ink: #0b0e17;
+  --color-panel: #131826;
+  --color-raised: #1a2032;
+  --color-rule: #252d42;
+  --color-parchment: #e8dcc8;
+  --color-muted: #8b93a8;
+  --color-amber: #d9a441;
+  --color-cyan: #5fd3c8;
+  --color-rust: #c9614b;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-reading: var(--font-reading), ui-serif, Georgia, serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-ink);
+  color: var(--color-parchment);
+  font-family: var(--font-display);
+}
+
+/* Hairline grid, barely there — a sheet of engineering paper under everything. */
+.ground {
+  background-image:
+    linear-gradient(to right, rgba(95, 211, 200, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(95, 211, 200, 0.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Answers read as prose; citation markers read as instrument output. */
+.answer {
+  font-family: var(--font-reading);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+
+.answer .marker {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  color: var(--color-cyan);
+  vertical-align: super;
+  padding: 0 0.1em;
+}
+
+/*
+  Study-guide prose. Long-form reading, so: serif body at a generous measure,
+  display face for structure, mono reserved for anything machine-shaped.
+*/
+.guide {
+  font-family: var(--font-reading);
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--color-parchment) 88%, transparent);
+}
+
+.guide > *:first-child {
+  margin-top: 0;
+}
+
+.guide h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--color-parchment);
+  margin: 2.75rem 0 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-rule);
+}
+
+.guide h1 {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  color: var(--color-parchment);
+  margin: 0 0 1rem;
+}
+
+.guide h3 {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  color: var(--color-amber);
+  margin: 1.75rem 0 0.5rem;
+}
+
+.guide p {
+  margin: 0.85rem 0;
+}
+
+.guide ul,
+.guide ol {
+  margin: 0.85rem 0;
+  padding-left: 1.35rem;
+}
+
+.guide ul {
+  list-style: disc;
+}
+.guide ol {
+  list-style: decimal;
+}
+.guide li {
+  margin: 0.35rem 0;
+}
+
+.guide strong {
+  color: var(--color-parchment);
+  font-weight: 600;
+}
+
+.guide a {
+  color: var(--color-cyan);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.guide blockquote {
+  border-left: 2px solid var(--color-amber);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--color-muted);
+}
+
+/* Inline code stays inline-sized; blocks get room to breathe. */
+.guide code {
+  font-family: var(--font-mono);
+  font-size: 0.8125em;
+  background: var(--color-raised);
+  border: 1px solid var(--color-rule);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  color: var(--color-cyan);
+}
+
+.guide pre {
+  background: #080b12;
+  border: 1px solid var(--color-rule);
+  border-left: 2px solid var(--color-cyan);
+  padding: 0.9rem 1rem;
+  margin: 1.1rem 0;
+  overflow-x: auto;
+}
+
+.guide pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-parchment) 85%, transparent);
+  white-space: pre;
+}
+
+/* Tables carry most of the comparison content — they must stay readable. */
+.guide .table-scroll {
+  overflow-x: auto;
+  margin: 1.1rem 0;
+}
+
+.guide table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+}
+
+.guide th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-amber);
+  border-bottom: 1px solid var(--color-rule);
+  padding: 0.55rem 0.85rem 0.55rem 0;
+  white-space: nowrap;
+}
+
+.guide td {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-rule) 55%, transparent);
+  padding: 0.55rem 0.85rem 0.55rem 0;
+  vertical-align: top;
+}
+
+.guide hr {
+  border: 0;
+  border-top: 1px solid var(--color-rule);
+  margin: 2rem 0;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.28s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
